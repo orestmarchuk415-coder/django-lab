@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import models
 from django.urls import reverse
 
+# 1. СПОЧАТКУ КАТЕГОРІЯ
 class Category(models.Model):
     category = models.CharField(u'Категорія', max_length=250, help_text=u'Максимум 250 символів')
     slug = models.SlugField(u'Слаг')
@@ -15,13 +16,24 @@ class Category(models.Model):
     def __str__(self):
         return self.category
 
+    def get_absolute_url(self):
+        try:
+            url = reverse('articles-category-list', kwargs={'slug': self.slug})
+        except:
+            url = "/"
+        return url
+
+# 2. ПОТІМ СТАТТЯ
 class Article(models.Model):
     title = models.CharField(u'Заголовок', max_length=250, help_text=u'Максимум 250 сим.')
     description = models.TextField(blank=True, verbose_name=u'Опис')
     pub_date = models.DateTimeField(u'Дата публікації', default=timezone.now)
     slug = models.SlugField(u'Слаг', unique_for_date='pub_date')
     main_page = models.BooleanField(u'Головна', default=False, help_text=u'Показувати')
-    category = models.ForeignKey(Category, related_name='news', blank=True, null=True, verbose_name=u'Категорія', on_delete=models.CASCADE)
+    
+    # Тепер лапки не потрібні, бо Category вже прочитана зверху
+    category = models.ForeignKey(Category, related_name='articles', blank=True, null=True, verbose_name=u'Категорія', on_delete=models.CASCADE)
+    
     objects = models.Manager()
 
     class Meta:
@@ -44,6 +56,7 @@ class Article(models.Model):
             url = "/"
         return url
 
+# 3. ПОТІМ ФОТО
 class ArticleImage(models.Model):
     article = models.ForeignKey(Article, verbose_name=u'Стаття', related_name='images', on_delete=models.CASCADE)
     image = models.ImageField(u'Фото', upload_to='photos')
